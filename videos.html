@@ -1,0 +1,152 @@
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<ul class="js-playlists">
+</ul>
+<ul class="js-videos">
+</ul>
+<span class="js-next">Next page</span>
+<span class="js-prev">Prev page</span>
+
+<script id="video_list_template" type="text/template">
+	<li>
+		<h3>{title}</h3>
+		<h4>{description}</h4>
+		<img src="{thumbnail.hqDefault}" alt="">
+	</li>
+</script>
+<script id="playlist_template" type="text/template">
+	<li>
+		<a href="#{id}">{title}</a>
+	</li>
+</script>
+
+<script>
+// This is the templating system
+function nano(template, data) {
+	return template.replace(/\{([\w\.]*)\}/g, function(str, key) {
+	var keys = key.split("."), v = data[keys.shift()];
+	for (var i = 0, l = keys.length; i < l; i++) v = v[keys[i]];
+	return (typeof v !== "undefined" && v !== null) ? v : "";
+	});
+}
+var video_list_template = $('#video_list_template').text();
+var playlist_template = $('#playlist_template').text();
+
+// /end templating system
+
+var options = {
+	index_count: 1,
+	per_page: 2,
+	page_number: 1,
+	max_pages: 2,
+	video_container: $('.js-videos'),
+	playlist_container: $('.js-playlists'),
+	next_link: $('.js-next'),
+	prev_link: $('.js-prev'),
+	playlist_link: false,
+	orderby: 'published',
+	format: 'jsonc',
+	api_version: 2,
+	user: 'mikestreety',
+	playlist_link: false,
+	api_base_url: 'https://gdata.youtube.com/feeds/api'
+}
+
+var urls = {
+	user_uploads: options.api_base_url + '/users/' + options.user + '/uploads',
+	user_playlists: options.api_base_url + '/users/' + options.user + '/playlists',
+	playlist_videos: options.api_base_url + '/playlists/'
+}
+
+function draw_thumbs(data) {
+	options.video_container.fadeOut(500, function(){
+		options.video_container.empty();
+		$.each(data.data.items, function(index, val) {
+			var video = (val.video)? val.video : val;
+			options.video_container.append(nano(video_list_template, video)).fadeIn();
+		});
+	})
+}
+function draw_playlists(data){
+	$.each(data.data.items, function(index, val) {
+		options.playlist_container.append(nano(playlist_template, val));
+	});
+}
+function pagination_visual(data){
+	options.max_pages = Math.ceil(data.data.totalItems / options.per_page);
+	if(options.page_number === options.max_pages)
+		options.next_link.hide();
+	else
+		options.next_link.show();
+
+	if(options.page_number === 1)
+		options.prev_link.hide();
+	else
+		options.prev_link.show();
+}
+function pagination(operator) {
+	options.index_count = eval(options.index_count + operator + options.per_page);
+	if(operator == '+')
+		options.page_number++;
+	else
+		options.page_number--;
+
+	if(options.playlist_link)
+		get_playlist_videos(options.playlist_link);
+	else
+		get_videos();
+}
+function get_videos(url){
+	$.ajax({
+		url: url,
+		data: {
+			'v': options.api_version,
+			'alt': options.format,
+			'orderby': options.orderby,
+			'start-index': options.index_count,
+			'max-results': options.per_page
+		},
+		success: function(data){
+			draw_thumbs(data);
+			pagination_visual(data);
+		}
+	});
+}
+function get_playlist_videos(link) {
+	get_videos(urls.playlist_videos + link);
+}
+function get_playlists(){
+	$.ajax({
+		url: urls.user_playlists,
+		data: {
+			'v': options.api_version,
+			'alt': options.format,
+			'orderby': options.orderby,
+		},
+		success: function(data){
+			draw_playlists(data);
+		}
+	});
+}
+
+
+$('body').on('click', '.js-playlists a', function(e){
+	var playlist_link = $(this).attr('href');
+	var link = playlist_link.replace(/#/,'');
+
+	window.location.hash = options.playlist_link = link;
+	get_playlist_videos(link);
+
+	e.preventDefault();
+});
+
+options.next_link.on('click', function(){
+	pagination('+');
+});
+options.prev_link.on('click', function(){
+	pagination('-');
+});
+
+
+get_videos(urls.user_uploads);
+get_playlists();
+</script>
