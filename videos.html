@@ -11,12 +11,12 @@
 	<li>
 		<h3>{title}</h3>
 		<h4>{description}</h4>
-		<img src="{thumbnail.hqDefault}" alt="">
+		<img src="{thumbnail.hqDefault}" alt="{title}">
 	</li>
 </script>
 <script id="playlist_template" type="text/template">
 	<li>
-		<a href="#{id}" class="playlist-yeah">{title}</a>
+		<a href="#{id}">{title}</a>
 	</li>
 </script>
 <script id="order_by_template" type="text/template">
@@ -157,7 +157,7 @@ function get_playlists(){
 	});
 }
 
-$('body').on('click', '.js-playlist a', function(e){
+$('body').on('click', '.js-playlists a', function(e){
 	var playlist_link = $(this).attr('href');
 	var link = playlist_link.replace(/#/,'');
 	options.index_count = 1;
