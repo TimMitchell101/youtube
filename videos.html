@@ -42,11 +42,11 @@ var options = {
 	page_number: 1,
 	max_pages: 2,
 
-	video_container: $('.js-videos'),
-	playlist_container: $('.js-playlists'),
-	order_by_container: $('.js-order'),
-	next_link: $('.js-next'),
-	prev_link: $('.js-prev'),
+	video_container: '.js-videos',
+	playlist_container: '.js-playlists',
+	order_by_container: '.js-order',
+	next_link: '.js-next',
+	prev_link: '.js-prev',
 
 	video_list_template: $('#video_list_template').text(),
 	playlist_template: $('#playlist_template').text(),
@@ -68,12 +68,16 @@ var urls = {
 	playlist_videos: options.api_base_url + '/playlists/'
 }
 
+var next_link = $(options.next_link);
+var prev_link = $(options.prev_link);
+
 function draw_thumbs(data) {
-	options.video_container.fadeOut(500, function(){
-		options.video_container.empty();
+	var container = $(options.video_container);
+	container.fadeOut(500, function(){
+		container.empty();
 		$.each(data.data.items, function(index, val) {
 			var video = (val.video)? val.video : val;
-			options.video_container.append(nano(options.video_list_template, video)).fadeIn();
+			container.append(nano(options.video_list_template, video)).fadeIn();
 		});
 	})
 }
@@ -84,7 +88,7 @@ function draw_playlists(data){
 		title: options.uploads_title
 	});
 	$.each(data.data.items, function(index, val) {
-		options.playlist_container.append(nano(options.playlist_template, val));
+		$(options.playlist_container).append(nano(options.playlist_template, val));
 	});
 }
 
@@ -96,23 +100,25 @@ function draw_order_by() {
 	];
 
 	// {title: 'Duration', order: 'duration'},
-
+	var container = $(options.order_by_container)
 	$.each(orders, function(index, val) {
-		options.order_by_container.append(nano(options.order_by_template, val));
+		container.append(nano(options.order_by_template, val));
 	});
 }
 
 function pagination_visual(data){
+
+
 	options.max_pages = Math.ceil(data.data.totalItems / options.per_page);
 	if(options.page_number === options.max_pages)
-		options.next_link.hide();
+		next_link.hide();
 	else
-		options.next_link.show();
+		next_link.show();
 
 	if(options.page_number === 1)
-		options.prev_link.hide();
+		prev_link.hide();
 	else
-		options.prev_link.show();
+		prev_link.show();
 }
 
 function pagination(operator) {
@@ -157,7 +163,7 @@ function get_playlists(){
 	});
 }
 
-$('body').on('click', '.js-playlists a', function(e){
+$('body').on('click', options.playlist_container + ' a', function(e){
 	var playlist_link = $(this).attr('href');
 	var link = playlist_link.replace(/#/,'');
 	options.index_count = 1;
@@ -169,7 +175,7 @@ $('body').on('click', '.js-playlists a', function(e){
 
 	e.preventDefault();
 });
-$('body').on('click', '.js-order a', function(e){
+$('body').on('click', options.order_by_container + ' a', function(e){
 	var playlist_order = $(this).attr('href');
 	var order = playlist_order.replace(/#/,'');
 
@@ -182,10 +188,10 @@ $('body').on('click', '.js-order a', function(e){
 	e.preventDefault();
 });
 
-options.next_link.on('click', function(){
+next_link.on('click', function(){
 	pagination('+');
 });
-options.prev_link.on('click', function(){
+prev_link.on('click', function(){
 	pagination('-');
 });
 
