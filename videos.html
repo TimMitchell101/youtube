@@ -1,8 +1,9 @@
 <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<ul class="js-playlists">
-</ul>
-<ul class="js-videos">
-</ul>
+
+<ul class="js-order"></ul>
+<ul class="js-playlists"></ul>
+<ul class="js-videos"></ul>
+
 <span class="js-next">Next page</span>
 <span class="js-prev">Prev page</span>
 
@@ -15,7 +16,12 @@
 </script>
 <script id="playlist_template" type="text/template">
 	<li>
-		<a href="#{id}">{title}</a>
+		<a href="#{id}" class="playlist-yeah">{title}</a>
+	</li>
+</script>
+<script id="order_by_template" type="text/template">
+	<li>
+		<a href="#{order}">{title}</a>
 	</li>
 </script>
 
@@ -28,9 +34,6 @@ function nano(template, data) {
 	return (typeof v !== "undefined" && v !== null) ? v : "";
 	});
 }
-var video_list_template = $('#video_list_template').text();
-var playlist_template = $('#playlist_template').text();
-
 // /end templating system
 
 var options = {
@@ -38,16 +41,24 @@ var options = {
 	per_page: 2,
 	page_number: 1,
 	max_pages: 2,
+
 	video_container: $('.js-videos'),
 	playlist_container: $('.js-playlists'),
+	order_by_container: $('.js-order'),
 	next_link: $('.js-next'),
 	prev_link: $('.js-prev'),
-	playlist_link: false,
+
+	video_list_template: $('#video_list_template').text(),
+	playlist_template: $('#playlist_template').text(),
+	order_by_template: $('#order_by_template').text(),
+
+	uploads_title: 'All Uploads',
 	orderby: 'published',
+	user: 'mikestreety',
+
+	current_playlist: false,
 	format: 'jsonc',
 	api_version: 2,
-	user: 'mikestreety',
-	playlist_link: false,
 	api_base_url: 'https://gdata.youtube.com/feeds/api'
 }
 
@@ -62,15 +73,35 @@ function draw_thumbs(data) {
 		options.video_container.empty();
 		$.each(data.data.items, function(index, val) {
 			var video = (val.video)? val.video : val;
-			options.video_container.append(nano(video_list_template, video)).fadeIn();
+			options.video_container.append(nano(options.video_list_template, video)).fadeIn();
 		});
 	})
 }
+
 function draw_playlists(data){
+	data.data.items.unshift({
+		link: '',
+		title: options.uploads_title
+	});
 	$.each(data.data.items, function(index, val) {
-		options.playlist_container.append(nano(playlist_template, val));
+		options.playlist_container.append(nano(options.playlist_template, val));
 	});
 }
+
+function draw_order_by() {
+	var orders = [
+		{title: 'Date', order: 'published'},
+		{title: 'View Count', order: 'viewCount'},
+		{title: 'Title', order: 'title'},
+	];
+
+	// {title: 'Duration', order: 'duration'},
+
+	$.each(orders, function(index, val) {
+		options.order_by_container.append(nano(options.order_by_template, val));
+	});
+}
+
 function pagination_visual(data){
 	options.max_pages = Math.ceil(data.data.totalItems / options.per_page);
 	if(options.page_number === options.max_pages)
@@ -83,6 +114,7 @@ function pagination_visual(data){
 	else
 		options.prev_link.show();
 }
+
 function pagination(operator) {
 	options.index_count = eval(options.index_count + operator + options.per_page);
 	if(operator == '+')
@@ -90,12 +122,11 @@ function pagination(operator) {
 	else
 		options.page_number--;
 
-	if(options.playlist_link)
-		get_playlist_videos(options.playlist_link);
-	else
-		get_videos();
+	get_videos(options.playlist_link);
 }
+
 function get_videos(url){
+	url = (url) ?  urls.playlist_videos + url : urls.user_uploads
 	$.ajax({
 		url: url,
 		data: {
@@ -111,9 +142,7 @@ function get_videos(url){
 		}
 	});
 }
-function get_playlist_videos(link) {
-	get_videos(urls.playlist_videos + link);
-}
+
 function get_playlists(){
 	$.ajax({
 		url: urls.user_playlists,
@@ -128,13 +157,27 @@ function get_playlists(){
 	});
 }
 
-
-$('body').on('click', '.js-playlists a', function(e){
+$('body').on('click', '.js-playlist a', function(e){
 	var playlist_link = $(this).attr('href');
 	var link = playlist_link.replace(/#/,'');
+	options.index_count = 1;
+	options.page_number = 1;
 
-	window.location.hash = options.playlist_link = link;
-	get_playlist_videos(link);
+	window.location.hash = options.current_playlist = link;
+
+	get_videos(link);
+
+	e.preventDefault();
+});
+$('body').on('click', '.js-order a', function(e){
+	var playlist_order = $(this).attr('href');
+	var order = playlist_order.replace(/#/,'');
+
+	options.index_count = 1;
+	options.page_number = 1;
+	options.orderby = order;
+
+	get_videos(options.current_playlist);
 
 	e.preventDefault();
 });
@@ -146,7 +189,7 @@ options.prev_link.on('click', function(){
 	pagination('-');
 });
 
-
-get_videos(urls.user_uploads);
+get_videos();
 get_playlists();
+draw_order_by();
 </script>
