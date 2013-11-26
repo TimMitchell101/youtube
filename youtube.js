@@ -11,8 +11,11 @@
 			video_container: 'ul[data-role="videos"]', // Where to put the videos
 			playlist_container: 'ul[data-role="playlists"]', // Where to put the playlists
 			orderby_container: 'ul[data-role="playlist-order"]', // Where to put the filtering
+
 			next_link: 'a[data-role="next-page"]', // What is the next link
 			prev_link: 'a[data-role="prev-page"]', // What is the prev page link
+			pagination_effect: 'hide', // What to do to the pagination. Can be hide, fade or class
+			pagination_effect_modifier: false, // If above is class or fade, what class to apply or fade duration
 
 			// The templates for the vidoes, playlists and filters - enable debug_info to see what values you can have
 			video_list_template: '<li><h3>{title}</h3><h4>{description}</h4><img src="{thumbnail.hqDefault}" alt="{title}"></li>',
@@ -196,18 +199,46 @@
 		*	Pagination
 		*/
 
+		var pagination_effect_positive = function(elem) {
+			switch(options.pagination_effect) {
+				case 'hide':
+				elem.show();
+				break;
+				case 'fade':
+					elem.fadeIn(options.pagination_effect_modifier);
+				break;
+				case 'class':
+					elem.removeClass(options.pagination_effect_modifier);
+				break;
+			}
+		}
+
+		var pagination_effect_negative = function(elem) {
+			switch(options.pagination_effect) {
+				case 'hide':
+					elem.hide();
+				break;
+				case 'fade':
+					elem.fadeOut(options.pagination_effect_modifier);
+				break;
+				case 'class':
+					elem.addClass(options.pagination_effect_modifier);
+				break;
+			}
+		}
+
 		// Hides and shows pagination links
 		var pagination_visual = function(data) {
 			options.max_pages = Math.ceil(data.data.totalItems / options.per_page);
 			if(options.page_number === options.max_pages)
-				next_link.hide();
+				pagination_effect_negative(next_link)
 			else
-				next_link.show();
+				pagination_effect_positive(next_link)
 
 			if(options.page_number === 1)
-				prev_link.hide();
+				pagination_effect_negative(prev_link)
 			else
-				prev_link.show();
+				pagination_effect_positive(prev_link)
 		}
 
 		// Keeps track of page and paginates through playlists and uploads

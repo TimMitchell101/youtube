@@ -37,8 +37,11 @@ var defaults = {
 	video_container: 'ul[data-role="videos"]', // Where to put the videos
 	playlist_container: 'ul[data-role="playlists"]', // Where to put the playlists
 	orderby_container: 'ul[data-role="playlist-order"]', // Where to put the filtering
+
 	next_link: 'a[data-role="next-page"]', // What is the next link
 	prev_link: 'a[data-role="prev-page"]', // What is the prev page link
+	pagination_effect: 'hide', // What to do to the pagination. Can be hide, fade or class
+	pagination_effect_modifier: false, // If above is class or fade, what class to apply or fade duration
 
 	// The templates for the vidoes, playlists and filters - enable debug_info to see what values you can have
 	video_list_template: '<li><h3>{title}</h3><h4>{description}</h4><img src="{thumbnail.hqDefault}" alt="{title}"></li>',
