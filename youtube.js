@@ -31,9 +31,9 @@
 
 			// Array of the filters
 			orderbys: [
+				{title: 'Title', order: 'title'},
 				{title: 'Date', order: 'published'},
 				{title: 'View Count', order: 'viewCount'},
-				{title: 'Title', order: 'title'},
 			],
 
 			// Dev debugging
